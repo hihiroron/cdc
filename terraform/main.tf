@@ -188,9 +188,15 @@ resource "aws_vpc_endpoint" "s3" {
   service_name = "com.amazonaws.ap-northeast-1.s3"
 }
 
-# 既存のルートテーブルにS3への道を自動で書き込む設定
+# 1. 指定したVPCに紐づいている「既存のルートテーブル」を自動検索してね、という定義
+data "aws_route_table" "selected" {
+  vpc_id = "vpc-0790aeb4085749dd4" # お使いのVPC ID
+}
+
+# 2. 前回のコード（検索結果のIDをここで使っている）
 resource "aws_vpc_endpoint_route_table_association" "s3_main" {
   vpc_endpoint_id = aws_vpc_endpoint.s3.id
-  route_table_id  = data.aws_route_table.selected.id # もしくはご自身のVPCのメインルートテーブルID
+  route_table_id  = data.aws_route_table.selected.id # 👈 上の検索結果からIDを自動代入！
 }
+
 
