@@ -182,3 +182,15 @@ variable "db_password" {
   default = "12345678"
 }
 
+# VPCからS3に直接通信できるようにするトンネル（無料）
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = "vpc-0790aeb4085749dd4"
+  service_name = "com.amazonaws.ap-northeast-1.s3"
+}
+
+# 既存のルートテーブルにS3への道を自動で書き込む設定
+resource "aws_vpc_endpoint_route_table_association" "s3_main" {
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+  route_table_id  = data.aws_route_table.selected.id # もしくはご自身のVPCのメインルートテーブルID
+}
+
