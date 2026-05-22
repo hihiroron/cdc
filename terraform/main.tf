@@ -7,7 +7,7 @@ resource "aws_dms_endpoint" "source" {
   port                        = 5432
   server_name = aws_db_instance.postgres.address
   ssl_mode = "require"
-  username = aws_db_instance.postgres.username
+  username = "postgres"
 }
 
 resource "aws_dms_s3_endpoint" "target" {
@@ -34,19 +34,10 @@ resource "aws_iam_role" "dms_s3_role" {
   name = "dms-s3-role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = [
-            "dms.amazonaws.com",
-            "dms-serverless.amazonaws.com" 
-          ]
-        }
-      },
-      {
-        Effect = "Allow"
+  Version = "2012-10-17"
+  Statement = [
+    {
+      Effect = "Allow"
         Principal = {
           Service = "dms.amazonaws.com"
         }
@@ -88,7 +79,7 @@ resource "aws_dms_replication_config" "postgre-s3-task-new" {
 
   table_mappings                = <<EOF
   {
-    "rules":[{"rule-type":"selection","rule-id":"1","rule-name":"1","rule-action":"include","object-locator":{"schema-name":"%%","table-name":"%%"}}]
+    "rules":[{"rule-type":"selection","rule-id":"1","rule-name":"1","rule-action":"include","object-locator":{"schema-name":"%","table-name":"%"}}]
   }
 EOF
 
@@ -127,11 +118,11 @@ resource "aws_security_group" "postgres" {
   vpc_id      = "vpc-0790aeb4085749dd4"
 
   ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  from_port = 5432
+  to_port   = 5432
+  protocol  = "tcp"
+  security_groups = [aws_security_group.dms.id]
+}
 
   egress {
     from_port   = 0
