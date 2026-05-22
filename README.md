@@ -7,3 +7,7 @@ Test connection failed for endpoint 'database-2-instance-1' and replication conf
 
 Additional info:
 Read timed out'
+
+05 22 17:48
+Test connection failed for endpoint 'dms-s3-new' and replication config 'postgre-s3-task-new'. Failure Message: 'Test Endpoint failed: Application-Status: 1020912, Application-Message: Failed to connect to database.'
+
