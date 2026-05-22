@@ -41,10 +41,11 @@ resource "aws_iam_role" "dms_s3_role" {
         Principal = {
           Service = [
             "dms.amazonaws.com",
-            "dms-serverless.amazonaws.com"
+            "dms-serverless.amazonaws.com" 
           ]
-        },
-        {
+        }
+      },
+      {
         Effect = "Allow"
         Principal = {
           Service = "dms.amazonaws.com"
