@@ -39,6 +39,14 @@ resource "aws_iam_role" "dms_s3_role" {
       {
         Effect = "Allow"
         Principal = {
+          Service = [
+            "dms.amazonaws.com",
+            "dms-serverless.amazonaws.com"
+          ]
+        },
+        {
+        Effect = "Allow"
+        Principal = {
           Service = "dms.amazonaws.com"
         }
         Action = "sts:AssumeRole"
