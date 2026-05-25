@@ -15,6 +15,9 @@ resource "aws_dms_s3_endpoint" "target" {
   endpoint_type           = "target"
   bucket_name             = "dms-test-sue"
   service_access_role_arn = aws_iam_role.dms_s3_role.arn
+  data_format = "csv"
+  csv_row_delimiter = "\n"
+  csv_delimiter     = ","
   depends_on = [aws_iam_role_policy.dms_s3_policy]
 }
 
@@ -83,6 +86,32 @@ resource "aws_dms_replication_config" "postgre-s3-task-new" {
   }
 EOF
 
+  # 詳細ログ出力
+  replication_settings = jsonencode({
+  Logging = {
+    EnableLogging = true
+
+    LogComponents = [
+      {
+        Id       = "SOURCE_CAPTURE"
+        Severity = "LOGGER_SEVERITY_DEBUG"
+      },
+      {
+        Id       = "TARGET_LOAD"
+        Severity = "LOGGER_SEVERITY_DEBUG"
+      },
+      {
+        Id       = "TARGET_APPLY"
+        Severity = "LOGGER_SEVERITY_DEBUG"
+      },
+      {
+        Id       = "TASK_MANAGER"
+        Severity = "LOGGER_SEVERITY_DEBUG"
+      }
+      ]
+    }
+  })
+
   compute_config {
     replication_subnet_group_id = aws_dms_replication_subnet_group.main.id
     max_capacity_units           = "1"
@@ -117,12 +146,20 @@ resource "aws_security_group" "postgres" {
   description = "PostgreSQL access"
   vpc_id      = "vpc-0790aeb4085749dd4"
 
+  # RDSから許可
   ingress {
   from_port = 5432
   to_port   = 5432
   protocol  = "tcp"
   security_groups = [aws_security_group.dms.id]
-}
+  }
+  # cloudシェルから許可
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   egress {
     from_port   = 0
@@ -182,21 +219,19 @@ variable "db_password" {
   default = "12345678"
 }
 
-# VPCからS3に直接通信できるようにするトンネル（無料）
+# VPCからS3に直接通信できるようにする
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = "vpc-0790aeb4085749dd4"
   service_name = "com.amazonaws.ap-northeast-1.s3"
 }
 
-# 1. 指定したVPCに紐づいている「既存のルートテーブル」を自動検索してね、という定義
 data "aws_route_table" "selected" {
-  vpc_id = "vpc-0790aeb4085749dd4" # お使いのVPC ID
+  vpc_id = "vpc-0790aeb4085749dd4" 
 }
 
-# 2. 前回のコード（検索結果のIDをここで使っている）
 resource "aws_vpc_endpoint_route_table_association" "s3_main" {
   vpc_endpoint_id = aws_vpc_endpoint.s3.id
-  route_table_id  = data.aws_route_table.selected.id # 👈 上の検索結果からIDを自動代入！
+  route_table_id  = data.aws_route_table.selected.id 
 }
 
 
